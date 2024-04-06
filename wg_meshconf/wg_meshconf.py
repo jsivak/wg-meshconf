@@ -136,6 +136,12 @@ def parse_arguments():
         default=False,
         action="store_true",
     )
+    genconfig.add_argument(
+        "--systemd-networkd",
+        help="generate systemd-networkd compatable configuration",
+        default=False,
+        action="store_true",
+    )
 
     return parser.parse_args()
 
@@ -196,7 +202,7 @@ def main():
         database_manager.showpeers(args.name, args.verbose)
 
     elif args.command == "genconfig":
-        database_manager.genconfig(args.name, args.output, args.psk)
+        database_manager.genconfig(args.name, args.output, args.psk, args.systemd_networkd)
 
     # if no commands are specified
     else:

@@ -337,7 +337,7 @@ class DatabaseManager:
         # print the constructed table in console
         Console().print(table)
 
-    def genconfig(self, Name: str, output: pathlib.Path, psk: bool):
+    def genconfig(self, Name: str, output: pathlib.Path, psk: bool, systemd_networkd: bool):
         database = self.read_database()
 
         # check if peer ID is specified
@@ -371,7 +371,17 @@ class DatabaseManager:
             local_peer = database["peers"][peer]
 
             with (output / f"{peer}.conf").open("w") as config:
-                config.write("[Interface]\n")
+                if systemd_networkd:
+                    config.write("[NetDev]\n")
+                    config.write("Name = wgNN\n")
+                    config.write("Kind = wireguard\n")
+                    config.write("Description = [generated descritpion here]\n")
+                    config.write("\n")
+
+                if systemd_networkd:
+                    config.write("[WireGuard]\n")
+                else:
+                    config.write("[Interface]\n")
                 config.write("# Name: {}\n".format(peer))
                 config.write("Address = {}\n".format(", ".join(local_peer["Address"])))
                 config.write("PrivateKey = {}\n".format(local_peer["PrivateKey"]))
@@ -384,7 +394,10 @@ class DatabaseManager:
                 for p in [i for i in database["peers"] if i != peer]:
                     remote_peer = database["peers"][p]
 
-                    config.write("\n[Peer]\n")
+                    if systemd_networkd:
+                        config.write("\n[WireGuardPeer]\n")
+                    else:
+                        config.write("\n[Peer]\n")
                     config.write("# Name: {}\n".format(p))
                     config.write(
                         "PublicKey = {}\n".format(
